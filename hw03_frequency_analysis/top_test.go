@@ -7,7 +7,7 @@ import (
 )
 
 // Change to true if needed
-var taskWithAsteriskIsCompleted = false
+var taskWithAsteriskIsCompleted = true
 
 var text = `Как видите, он  спускается  по  лестнице  вслед  за  своим
 	другом   Кристофером   Робином,   головой   вниз,  пересчитывая
@@ -57,4 +57,18 @@ func TestTop10(t *testing.T) {
 			assert.ElementsMatch(t, expected, Top10(text))
 		}
 	})
+
+	if taskWithAsteriskIsCompleted {
+		t.Run("ignore punctuation and case", func (t *testing.T) {
+			text := `"Нога" и "нога" - это одинаковые слова, "нога!", "нога" и " 'нога' " - это одинаковые слова;`
+			expected := []string{"нога", "и", "это", "одинаковые", "слова"}
+			assert.ElementsMatch(t, expected, Top10(text))
+		})
+
+		t.Run("ignore dash and hypen", func (t *testing.T) {
+			text := `"какой-то" и "какойто" - это разные слова, "—" (тире) - это не слово.`
+			expected := []string{"какой-то", "и", "какойто", "это", "разные", "слова", "тире", "не", "слово"}
+			assert.ElementsMatch(t, expected, Top10(text))
+		})
+	}
 }
