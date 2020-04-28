@@ -27,7 +27,7 @@ type list struct {
 	len   int
 	front *ListItem
 	back  *ListItem
-	items map[*ListItem]int
+	items map[*ListItem]struct{}
 }
 
 func (d list) Len() int {
@@ -56,7 +56,7 @@ func (d *list) makeFront(li *ListItem) {
 func (d *list) PushFront(v interface{}) *ListItem {
 	li := ListItem{v, nil, nil}
 	d.makeFront(&li)
-	d.items[d.front] = d.len
+	d.items[d.front] = struct{}{}
 	d.len++
 	return d.front
 }
@@ -74,7 +74,7 @@ func (d *list) PushBack(v interface{}) *ListItem {
 		d.front = d.back
 	}
 
-	d.items[d.back] = d.len
+	d.items[d.back] = struct{}{}
 	d.len++
 
 	return d.back
@@ -136,5 +136,5 @@ func (d list) Items() []*ListItem {
 }
 
 func NewList() List {
-	return &list{items: map[*ListItem]int{}}
+	return &list{items: map[*ListItem]struct{}{}}
 }

@@ -1,7 +1,6 @@
 package hw04_lru_cache //nolint:golint,stylecheck
 
 import (
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
@@ -155,7 +154,7 @@ func TestList(t *testing.T) {
 		l.MoveToFront(lis[0])              // [10, 20]
 		require.Equal(t, 2, l.Len())
 		for i, k := l.Front(), 0; i != nil; i, k = i.Prev, k+1 {
-			assert.Equal(t, lis[k], i)
+			require.Equal(t, lis[k], i)
 		}
 
 	})

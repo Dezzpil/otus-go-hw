@@ -60,11 +60,12 @@ func TestCache(t *testing.T) {
 			{"pew", 300},
 			{"baz", 400},
 		}
-		keys := make([]string, 0, 3)
+		keys := make([]string, 0, 4)
 		for _, s := range data {
 			keys = append(keys, s.key)
 			cache.Set(s.key, s.val)
 		}
+
 		require.ElementsMatch(t, keys[1:], cache.Keys())
 	})
 
@@ -85,7 +86,6 @@ func TestCache(t *testing.T) {
 }
 
 func TestCacheMultithreading(t *testing.T) {
-	t.Skip() // Remove if task with asterisk completed
 
 	c := NewCache(10)
 	wg := &sync.WaitGroup{}
