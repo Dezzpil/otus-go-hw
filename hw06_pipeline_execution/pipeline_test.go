@@ -14,26 +14,11 @@ const (
 )
 
 func TestPipeline(t *testing.T) {
-	// Stage generator
-	g := func(name string, f func(v I) I) Stage {
-		return func(in In) Out {
-			out := make(Bi)
-			go func() {
-				defer close(out)
-				for v := range in {
-					time.Sleep(sleepPerStage)
-					out <- f(v)
-				}
-			}()
-			return out
-		}
-	}
-
-	stages := []Stage{
-		g("Dummy", func(v I) I { return v }),
-		g("Multiplier (* 2)", func(v I) I { return v.(int) * 2 }),
-		g("Adder (+ 100)", func(v I) I { return v.(int) + 100 }),
-		g("Stringifier", func(v I) I { return strconv.Itoa(v.(int)) }),
+	stages := []Stage {
+		CreateStage(func(v I) I { time.Sleep(sleepPerStage); return v }), // Dummy
+		CreateStage(func(v I) I { time.Sleep(sleepPerStage); return v.(int) * 2 }), // Multiplier (* 2)
+		CreateStage(func(v I) I { time.Sleep(sleepPerStage); return v.(int) + 100 }), // Adder (+ 100)
+		CreateStage(func(v I) I { time.Sleep(sleepPerStage); return strconv.Itoa(v.(int)) }), // "Stringifier"
 	}
 
 	t.Run("simple case", func(t *testing.T) {
@@ -47,7 +32,7 @@ func TestPipeline(t *testing.T) {
 			close(in)
 		}()
 
-		result := make([]string, 0, 10)
+		result := make([]string, 0, 5)
 		start := time.Now()
 		for s := range ExecutePipeline(in, nil, stages...) {
 			result = append(result, s.(string))
@@ -80,7 +65,7 @@ func TestPipeline(t *testing.T) {
 			close(in)
 		}()
 
-		result := make([]string, 0, 10)
+		result := make([]string, 0, 5)
 		start := time.Now()
 		for s := range ExecutePipeline(in, done, stages...) {
 			result = append(result, s.(string))
