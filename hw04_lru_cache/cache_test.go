@@ -1,12 +1,14 @@
 package hw04_lru_cache //nolint:golint,stylecheck
 
 import (
+	"github.com/stretchr/testify/require"
 	"math/rand"
 	"strconv"
 	"sync"
 	"testing"
+	"time"
 
-	"github.com/stretchr/testify/require"
+	"go.uber.org/goleak"
 )
 
 func TestCache(t *testing.T) {
@@ -86,26 +88,61 @@ func TestCache(t *testing.T) {
 }
 
 func TestCacheMultithreading(t *testing.T) {
+	defer goleak.VerifyNone(t)
 
-	c := NewCache(10)
-	wg := &sync.WaitGroup{}
-	wg.Add(2)
+	t.Run("simple", func(t *testing.T) {
+		c := NewCache(10)
+		wg := &sync.WaitGroup{}
+		wg.Add(2)
 
-	go func() {
-		defer wg.Done()
-		for i := 0; i < 1_000_000; i++ {
-			//c.Set(Key(strconv.Itoa(i)), i)
-			c.Set(strconv.Itoa(i), i)
+		go func() {
+			defer wg.Done()
+			for i := 0; i < 1_000_000; i++ {
+				//c.Set(Key(strconv.Itoa(i)), i)
+				c.Set(strconv.Itoa(i), i)
+			}
+		}()
+
+		go func() {
+			defer wg.Done()
+			for i := 0; i < 1_000_000; i++ {
+				//c.Get(Key(strconv.Itoa(rand.Intn(1_000_000))))
+				c.Get(strconv.Itoa(rand.Intn(1_000_000)))
+			}
+		}()
+
+		wg.Wait()
+	})
+
+	t.Run("least recently", func(t *testing.T) {
+		cache := NewCache(15)
+		wg := &sync.WaitGroup{}
+
+		// запустим 1-го поставщика для кэша
+		wg.Add(1)
+		go func() {
+			for i := 0; i < 1000; i += 5 {
+				time.Sleep(1 * time.Millisecond)
+				cache.Set(strconv.Itoa(i), i)
+			}
+			wg.Done()
+		}()
+
+		for k := 0; k < 2; k++ {
+			// запустим 10 клиентов кэша
+			wg.Add(1)
+			go func(k int) {
+				for i := 0; i < 2000; i++ {
+					// 1000 раз обращаемся по одному ключу
+					// задержка чуть больше чем при записи
+					time.Sleep(2 * time.Millisecond)
+					cache.Get(strconv.Itoa(k*5))
+				}
+				wg.Done()
+			}(k)
 		}
-	}()
 
-	go func() {
-		defer wg.Done()
-		for i := 0; i < 1_000_000; i++ {
-			//c.Get(Key(strconv.Itoa(rand.Intn(1_000_000))))
-			c.Get(strconv.Itoa(rand.Intn(1_000_000)))
-		}
-	}()
-
-	wg.Wait()
+		wg.Wait()
+		require.Subset(t, cache.Keys(), []interface{}{"0", "5"})
+	})
 }
