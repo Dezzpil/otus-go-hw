@@ -115,7 +115,7 @@ func TestCacheMultithreading(t *testing.T) {
 	})
 
 	t.Run("least recently", func(t *testing.T) {
-		cache := NewCache(15)
+		cache := NewCache(20)
 		wg := &sync.WaitGroup{}
 
 		// запустим 1-го поставщика для кэша
@@ -129,14 +129,15 @@ func TestCacheMultithreading(t *testing.T) {
 		}()
 
 		for k := 0; k < 2; k++ {
-			// запустим 10 клиентов кэша
+			// запустим 2 клиента кэша
 			wg.Add(1)
 			go func(k int) {
 				for i := 0; i < 2000; i++ {
-					// 1000 раз обращаемся по одному ключу
-					// задержка чуть больше чем при записи
-					time.Sleep(2 * time.Millisecond)
-					cache.Get(strconv.Itoa(k*5))
+					// много раз обращаемся по одному ключу
+					// при достаточном объеме кэша мы будем успевать использовать нужные значения до того,
+					// как они вытеснятся
+					time.Sleep(1 * time.Millisecond)
+					cache.Get(strconv.Itoa(k * 5))
 				}
 				wg.Done()
 			}(k)

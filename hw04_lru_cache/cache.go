@@ -13,9 +13,9 @@ type Cache interface {
 type lruCache struct {
 	capacity int
 
-	m sync.Mutex
-	queue    List
-	items    map[Key]*cacheItem
+	m     sync.Mutex
+	queue List
+	items map[Key]*cacheItem
 }
 
 type cacheItem struct {
